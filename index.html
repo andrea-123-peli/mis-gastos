@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Mis Gastos</title>
-<link rel="manifest" href='data:application/json,{"name":"Mis Gastos","short_name":"Mis Gastos","display":"standalone","start_url":".","background_color":"%23EFF1EE","theme_color":"%2312352C"}'>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -13,7 +12,6 @@
   }
   .contenedor { max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; }
 
-  /* Pestañas */
   .pestanas { display: flex; gap: 8px; margin-bottom: 16px; background: #E1E5E2; border-radius: 14px; padding: 5px; }
   .pestana {
     flex: 1; padding: 12px 0; border-radius: 10px; border: none; cursor: pointer;
@@ -21,7 +19,6 @@
   }
   .pestana.activa { background: #12352C; color: #FFF; }
 
-  /* Tarjetas */
   .tarjeta { background: #FFF; border-radius: 18px; padding: 18px; box-shadow: 0 2px 8px rgba(30,42,38,.08); }
   .tarjeta h2 { font-size: 18px; font-weight: 800; color: #12352C; margin-bottom: 14px; }
 
@@ -31,7 +28,6 @@
     font-size: 16px; margin-bottom: 16px; outline: none; background: #FAFBFA; font-family: inherit;
   }
 
-  /* Chips de categorías */
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
   .chip {
     display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 12px;
@@ -46,7 +42,6 @@
   }
   .boton-principal:disabled { background: #C7CFCB; cursor: not-allowed; }
 
-  /* Total del mes */
   .total-mes { background: #12352C; border-radius: 18px; padding: 16px 18px; color: #F2F6F3; margin-top: 16px;
     display: flex; justify-content: space-between; align-items: center; }
   .btn-mes {
@@ -57,7 +52,6 @@
   .titulo-seccion { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: #5B6B64;
     font-weight: 700; margin: 20px 0 10px; }
 
-  /* Tabla de totales por categoría */
   .tabla-totales { background: #FFF; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(30,42,38,.06); }
   .fila-total { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-top: 1px solid #EFF1EE; }
   .fila-total:first-child { border-top: none; }
@@ -66,12 +60,10 @@
   .fila-final { display: flex; justify-content: space-between; padding: 13px 16px; background: #12352C;
     color: #F2F6F3; font-weight: 800; font-size: 15px; }
 
-  /* Lista de gastos */
   .gasto { display: flex; align-items: center; gap: 12px; background: #FFF; border-radius: 14px;
     padding: 10px 14px; box-shadow: 0 1px 3px rgba(30,42,38,.06); margin-bottom: 8px; }
   .btn-borrar { border: none; background: transparent; cursor: pointer; color: #B9C4BF; font-size: 16px; padding: 4px; }
 
-  /* Libro */
   .anio-franja { display: flex; justify-content: space-between; background: #12352C; color: #F2F6F3;
     border-radius: 14px 14px 0 0; padding: 12px 16px; font-size: 15px; font-weight: 800; }
   .mes-fila { display: flex; justify-content: space-between; width: 100%; border: none; cursor: pointer;
@@ -81,71 +73,120 @@
   .mes-fila.actual { background: #E3F4EC; font-weight: 800; }
   .vacio { background: #FFF; border-radius: 14px; padding: 24px 16px; text-align: center; color: #5B6B64; font-size: 14px; }
   .nota { font-size: 12.5px; color: #5B6B64; margin-top: 6px; }
-  .oculto { display: none; }
+  .oculto { display: none !important; }
+  .aviso { background: #FDF3E7; border: 1.5px solid #EBC79A; color: #7A5A2E; border-radius: 12px;
+    padding: 10px 14px; font-size: 13.5px; margin-bottom: 14px; }
+  .usuario-barra { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+    font-size: 13.5px; color: #5B6B64; }
+  .btn-salir { border: none; background: #E1E5E2; border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    font-size: 12.5px; font-weight: 700; color: #5B6B64; font-family: inherit; }
+  .cargando { text-align: center; color: #5B6B64; padding: 40px 0; font-size: 15px; }
 </style>
 </head>
 <body>
 <div class="contenedor">
 
-  <!-- Pestañas -->
-  <div class="pestanas">
-    <button class="pestana activa" id="tab-mes" onclick="cambiarVista('mes')">✏️ Anotar gastos</button>
-    <button class="pestana" id="tab-libro" onclick="cambiarVista('libro')">📖 Libro de gastos</button>
+  <!-- ══ PANTALLA DE ENTRADA ══ -->
+  <div id="pantalla-clave">
+    <div class="tarjeta" style="margin-top: 40px">
+      <h2>💰 Mis Gastos</h2>
+      <p style="font-size:14px;color:#5B6B64;margin-bottom:16px">
+        Escribe tu <b>palabra clave personal</b> para ver tus gastos.
+        Cada persona tiene la suya: con esa palabra entras desde cualquier celular y ves solo lo tuyo.
+      </p>
+      <label class="etiqueta">Tu palabra clave</label>
+      <input class="campo" type="text" id="clave-input" placeholder="Ej: andrea2026" autocomplete="off">
+      <p style="font-size:12.5px;color:#8A6D1D;background:#F5EFDD;border-radius:10px;padding:8px 12px;margin-bottom:14px">
+        ⚠️ Escríbela siempre igualita (mismas letras, sin espacios). Si la cambias, te aparece un libro nuevo vacío.
+      </p>
+      <button class="boton-principal" onclick="entrar()">Entrar a mis gastos</button>
+    </div>
   </div>
 
-  <!-- ══ VISTA: ANOTAR GASTOS ══ -->
-  <div id="vista-mes">
-    <div class="tarjeta">
-      <h2>Anotar un gasto</h2>
-      <label class="etiqueta">1. ¿De qué fue el gasto?</label>
-      <div class="chips" id="chips"></div>
-      <label class="etiqueta">2. ¿Cuánto gastó? (en pesos)</label>
-      <input class="campo" type="number" inputmode="numeric" id="monto" placeholder="Escriba aquí, ej: 25000">
-      <label class="etiqueta">3. ¿En qué? (opcional)</label>
-      <input class="campo" type="text" id="descripcion" placeholder="Ej: gasolina, mercado, un dulce…">
-      <label class="etiqueta">4. Fecha</label>
-      <input class="campo" type="date" id="fecha">
-      <button class="boton-principal" id="btn-guardar" onclick="agregarGasto()">Guardar gasto</button>
+  <!-- ══ APLICACIÓN ══ -->
+  <div id="app" class="oculto">
+
+    <div class="usuario-barra">
+      <span>👤 Entraste como: <b id="clave-mostrar"></b></span>
+      <button class="btn-salir" onclick="salir()">Cambiar</button>
     </div>
 
-    <div class="total-mes">
-      <div>
-        <div style="font-size:12px;color:#9AD0B8">Total gastado en</div>
-        <div style="font-size:26px;font-weight:800" id="total-grande">$ 0</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:4px">
-        <button class="btn-mes" onclick="cambiarMes(-1)">‹</button>
-        <span style="font-size:13px;font-weight:700;min-width:100px;text-align:center" id="mes-titulo"></span>
-        <button class="btn-mes" onclick="cambiarMes(1)">›</button>
-      </div>
+    <div id="aviso-conexion" class="aviso oculto">
+      ⚠️ Sin conexión a Internet. Revisa tus datos y vuelve a intentar.
     </div>
 
-    <h3 class="titulo-seccion" id="titulo-totales">Totales por categoría</h3>
-    <div class="tabla-totales" id="tabla-totales"></div>
+    <div class="pestanas">
+      <button class="pestana activa" id="tab-mes" onclick="cambiarVista('mes')">✏️ Anotar gastos</button>
+      <button class="pestana" id="tab-libro" onclick="cambiarVista('libro')">📖 Libro de gastos</button>
+    </div>
 
-    <h3 class="titulo-seccion" id="titulo-lista">Gastos del mes</h3>
-    <div id="lista-gastos"></div>
+    <div id="cargando" class="cargando">Cargando tus gastos…</div>
+
+    <div id="contenido" class="oculto">
+
+      <!-- VISTA: ANOTAR -->
+      <div id="vista-mes">
+        <div class="tarjeta">
+          <h2>Anotar un gasto</h2>
+          <label class="etiqueta">1. ¿De qué fue el gasto?</label>
+          <div class="chips" id="chips"></div>
+          <label class="etiqueta">2. ¿Cuánto gastó? (en pesos)</label>
+          <input class="campo" type="number" inputmode="numeric" id="monto" placeholder="Escriba aquí, ej: 25000">
+          <label class="etiqueta">3. ¿En qué? (opcional)</label>
+          <input class="campo" type="text" id="descripcion" placeholder="Ej: gasolina, mercado, un dulce…">
+          <label class="etiqueta">4. Fecha</label>
+          <input class="campo" type="date" id="fecha">
+          <button class="boton-principal" id="btn-guardar" onclick="agregarGasto()">Guardar gasto</button>
+        </div>
+
+        <div class="total-mes">
+          <div>
+            <div style="font-size:12px;color:#9AD0B8">Total gastado en</div>
+            <div style="font-size:26px;font-weight:800" id="total-grande">$ 0</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="btn-mes" onclick="cambiarMes(-1)">‹</button>
+            <span style="font-size:13px;font-weight:700;min-width:100px;text-align:center" id="mes-titulo"></span>
+            <button class="btn-mes" onclick="cambiarMes(1)">›</button>
+          </div>
+        </div>
+
+        <h3 class="titulo-seccion" id="titulo-totales">Totales por categoría</h3>
+        <div class="tabla-totales" id="tabla-totales"></div>
+
+        <h3 class="titulo-seccion" id="titulo-lista">Gastos del mes</h3>
+        <div id="lista-gastos"></div>
+      </div>
+
+      <!-- VISTA: LIBRO -->
+      <div id="vista-libro" class="oculto">
+        <div class="tarjeta" style="margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;color:#3C4A44;margin-bottom:4px">¿Ya sabe cuánto gastó en un mes pasado?</div>
+          <div style="font-size:12.5px;color:#5B6B64;margin-bottom:12px">Anote aquí el total de una sola vez para que sume en el año.</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <select class="campo" id="ant-mes" style="margin-bottom:0;flex:1.4"></select>
+            <select class="campo" id="ant-anio" style="margin-bottom:0;flex:1"></select>
+          </div>
+          <input class="campo" type="number" inputmode="numeric" id="ant-monto" placeholder="Total gastado ese mes, ej: 900000" style="margin-bottom:10px">
+          <button class="boton-principal" style="background:#4A6B5F" id="btn-ant" onclick="agregarMesAnterior()">Anotar ese mes</button>
+        </div>
+        <div id="historial"></div>
+      </div>
+
+    </div>
   </div>
-
-  <!-- ══ VISTA: LIBRO ══ -->
-  <div id="vista-libro" class="oculto">
-    <div class="tarjeta" style="margin-bottom:14px">
-      <div style="font-size:14px;font-weight:700;color:#3C4A44;margin-bottom:4px">¿Ya sabe cuánto gastó en un mes pasado?</div>
-      <div style="font-size:12.5px;color:#5B6B64;margin-bottom:12px">Anote aquí el total de una sola vez para que sume en el año.</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <select class="campo" id="ant-mes" style="margin-bottom:0;flex:1.4"></select>
-        <select class="campo" id="ant-anio" style="margin-bottom:0;flex:1"></select>
-      </div>
-      <input class="campo" type="number" inputmode="numeric" id="ant-monto" placeholder="Total gastado ese mes, ej: 900000" style="margin-bottom:10px">
-      <button class="boton-principal" style="background:#4A6B5F" id="btn-ant" onclick="agregarMesAnterior()">Anotar ese mes</button>
-    </div>
-    <div id="historial"></div>
-  </div>
-
 </div>
 
 <script>
-// ── Categorías ──
+// ══ CONEXIÓN A SUPABASE ══
+const SB_URL = "https://dbbigzhrpaoapavngyji.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYmlnemhycGFvYXBhdm5neWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwODIzMDksImV4cCI6MjEwMDY1ODMwOX0.N13CxoSc_DCLkIo29ASAV-KFh8J9kONbyFB4wro1rj8";
+const CABECERAS = {
+  "apikey": SB_KEY,
+  "Authorization": "Bearer " + SB_KEY,
+  "Content-Type": "application/json",
+};
+
 const CATEGORIAS = {
   trabajo:    { nombre: "Trabajo",               color: "#B3641D", bg: "#F9EDDD", emoji: "🏍️" },
   casa:       { nombre: "Casa",                  color: "#7A4AA5", bg: "#F0E8F8", emoji: "🏠" },
@@ -156,91 +197,141 @@ const CATEGORIAS = {
 };
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
-// ── Estado ──
 let gastos = [];
-try { gastos = JSON.parse(localStorage.getItem("misgastos") || "[]"); } catch(e) { gastos = []; }
+let clave = localStorage.getItem("misgastos_clave") || "";
 const hoy = new Date();
 let mes = hoy.getMonth(), anio = hoy.getFullYear();
 let categoria = "trabajo";
 
 const fmt = n => new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n);
-const guardarLS = () => localStorage.setItem("misgastos", JSON.stringify(gastos));
 const $ = id => document.getElementById(id);
+const normalizar = t => t.trim().toLowerCase().replace(/\s+/g,"");
 
-// ── Inicializar ──
-function init() {
-  $("fecha").value = hoy.toISOString().slice(0,10);
-  // Chips
-  const chips = $("chips");
-  for (const [key, cat] of Object.entries(CATEGORIAS)) {
-    if (cat.oculta) continue;
-    const b = document.createElement("button");
-    b.className = "chip" + (key === categoria ? " activa" : "");
-    b.style.background = cat.bg; b.style.color = cat.color;
-    b.dataset.key = key;
-    b.textContent = cat.emoji + " " + cat.nombre;
-    b.onclick = () => {
-      categoria = key;
-      document.querySelectorAll(".chip").forEach(c => {
-        c.classList.toggle("activa", c.dataset.key === key);
-        c.style.borderColor = c.dataset.key === key ? CATEGORIAS[key].color : "transparent";
-      });
-    };
-    if (key === categoria) b.style.borderColor = cat.color;
-    chips.appendChild(b);
-  }
-  // Selects de mes anterior
-  MESES.forEach((m,i) => $("ant-mes").add(new Option(m, i)));
-  const mesPasado = hoy.getMonth() === 0 ? 11 : hoy.getMonth()-1;
-  $("ant-mes").value = mesPasado;
-  for (let d = 0; d < 5; d++) {
-    const y = hoy.getFullYear() - d;
-    $("ant-anio").add(new Option(y, y));
-  }
-  if (hoy.getMonth() === 0) $("ant-anio").value = hoy.getFullYear()-1;
+// ══ ENTRADA ══
+function entrar() {
+  const c = normalizar($("clave-input").value);
+  if (!c || c.length < 3) { alert("Escribe una palabra clave de mínimo 3 letras."); return; }
+  clave = c;
+  localStorage.setItem("misgastos_clave", clave);
+  iniciarApp();
+}
+
+function salir() {
+  if (!confirm("¿Cambiar de persona? Tus datos quedan guardados en Internet, solo cierras tu sesión en este aparato.")) return;
+  localStorage.removeItem("misgastos_clave");
+  location.reload();
+}
+
+async function iniciarApp() {
+  $("pantalla-clave").classList.add("oculto");
+  $("app").classList.remove("oculto");
+  $("clave-mostrar").textContent = clave;
+  $("cargando").classList.remove("oculto");
+  $("contenido").classList.add("oculto");
+  await cargarGastos();
+  $("cargando").classList.add("oculto");
+  $("contenido").classList.remove("oculto");
   pintar();
 }
 
-// ── Acciones ──
-function agregarGasto() {
+// ══ SUPABASE: LEER / GUARDAR / BORRAR ══
+async function cargarGastos() {
+  try {
+    const r = await fetch(SB_URL + "/rest/v1/gastos?clave=eq." + encodeURIComponent(clave) + "&select=*&order=fecha.desc,id.desc", { headers: CABECERAS });
+    if (!r.ok) throw new Error("respuesta " + r.status);
+    gastos = await r.json();
+    $("aviso-conexion").classList.add("oculto");
+  } catch (e) {
+    $("aviso-conexion").classList.remove("oculto");
+    gastos = gastos || [];
+  }
+}
+
+async function guardarEnNube(registro) {
+  const r = await fetch(SB_URL + "/rest/v1/gastos", {
+    method: "POST",
+    headers: { ...CABECERAS, "Prefer": "return=minimal" },
+    body: JSON.stringify(registro),
+  });
+  if (!r.ok) throw new Error("no se pudo guardar");
+}
+
+async function borrarEnNube(id) {
+  const r = await fetch(SB_URL + "/rest/v1/gastos?id=eq." + encodeURIComponent(id) + "&clave=eq." + encodeURIComponent(clave), {
+    method: "DELETE", headers: CABECERAS,
+  });
+  if (!r.ok) throw new Error("no se pudo borrar");
+}
+
+// ══ ACCIONES ══
+async function agregarGasto() {
   const valor = parseFloat(String($("monto").value).replace(/[.,\s]/g,""));
   if (!valor || valor <= 0) { alert("Escriba primero cuánto gastó."); return; }
-  gastos.unshift({
+  const b = $("btn-guardar");
+  b.disabled = true; b.textContent = "Guardando…";
+  const registro = {
     id: Date.now().toString(),
+    clave,
     categoria,
     monto: valor,
     descripcion: $("descripcion").value.trim() || CATEGORIAS[categoria].nombre,
     fecha: $("fecha").value || hoy.toISOString().slice(0,10),
-  });
-  guardarLS();
-  $("monto").value = ""; $("descripcion").value = "";
-  const b = $("btn-guardar"); b.textContent = "✓ ¡Gasto guardado!";
+  };
+  try {
+    await guardarEnNube(registro);
+    gastos.unshift(registro);
+    $("monto").value = ""; $("descripcion").value = "";
+    b.textContent = "✓ ¡Gasto guardado!";
+    $("aviso-conexion").classList.add("oculto");
+    pintar();
+  } catch(e) {
+    $("aviso-conexion").classList.remove("oculto");
+    alert("No se pudo guardar. Revisa tu Internet e intenta otra vez.");
+    b.textContent = "Guardar gasto";
+  }
+  b.disabled = false;
   setTimeout(() => b.textContent = "Guardar gasto", 2000);
-  pintar();
 }
 
-function agregarMesAnterior() {
+async function agregarMesAnterior() {
   const valor = parseFloat(String($("ant-monto").value).replace(/[.,\s]/g,""));
   if (!valor || valor <= 0) { alert("Escriba primero el total de ese mes."); return; }
   const m = Number($("ant-mes").value), y = Number($("ant-anio").value);
-  gastos.unshift({
+  const b = $("btn-ant");
+  b.disabled = true; b.textContent = "Guardando…";
+  const registro = {
     id: Date.now().toString(),
+    clave,
     categoria: "anterior",
     monto: valor,
     descripcion: "Total de " + MESES[m] + " " + y,
     fecha: y + "-" + String(m+1).padStart(2,"0") + "-01",
-  });
-  guardarLS();
-  $("ant-monto").value = "";
-  const b = $("btn-ant"); b.textContent = "✓ ¡Mes anotado!";
+  };
+  try {
+    await guardarEnNube(registro);
+    gastos.unshift(registro);
+    $("ant-monto").value = "";
+    b.textContent = "✓ ¡Mes anotado!";
+    $("aviso-conexion").classList.add("oculto");
+    pintar();
+  } catch(e) {
+    $("aviso-conexion").classList.remove("oculto");
+    alert("No se pudo guardar. Revisa tu Internet e intenta otra vez.");
+    b.textContent = "Anotar ese mes";
+  }
+  b.disabled = false;
   setTimeout(() => b.textContent = "Anotar ese mes", 2000);
-  pintar();
 }
 
-function eliminarGasto(id) {
+async function eliminarGasto(id) {
   if (!confirm("¿Borrar este gasto?")) return;
-  gastos = gastos.filter(g => g.id !== id);
-  guardarLS(); pintar();
+  try {
+    await borrarEnNube(id);
+    gastos = gastos.filter(g => g.id !== id);
+    pintar();
+  } catch(e) {
+    alert("No se pudo borrar. Revisa tu Internet e intenta otra vez.");
+  }
 }
 
 function cambiarMes(dir) {
@@ -264,21 +355,20 @@ function irAMes(m, y) {
   pintar();
 }
 
-// ── Pintar todo ──
+// ══ PINTAR ══
 function pintar() {
   const delMes = gastos.filter(g => {
-    const [y, mm] = g.fecha.split("-").map(Number);
+    const [y, mm] = String(g.fecha).split("-").map(Number);
     return y === anio && mm-1 === mes;
   });
   let total = 0; const porCat = {};
-  for (const g of delMes) { total += g.monto; porCat[g.categoria] = (porCat[g.categoria]||0) + g.monto; }
+  for (const g of delMes) { const monto = Number(g.monto); total += monto; porCat[g.categoria] = (porCat[g.categoria]||0) + monto; }
 
   $("mes-titulo").textContent = MESES[mes] + " " + anio;
   $("total-grande").textContent = fmt(total);
   $("titulo-totales").textContent = "Totales de " + MESES[mes].toLowerCase() + " por categoría";
   $("titulo-lista").textContent = "Gastos de " + MESES[mes].toLowerCase();
 
-  // Tabla de totales
   let html = "";
   for (const [key, cat] of Object.entries(CATEGORIAS)) {
     if (cat.oculta && !porCat[key]) continue;
@@ -292,31 +382,30 @@ function pintar() {
   html += `<div class="fila-final"><span>Total del mes</span><span>${fmt(total)}</span></div>`;
   $("tabla-totales").innerHTML = html;
 
-  // Lista
   if (delMes.length === 0) {
     $("lista-gastos").innerHTML = `<div class="vacio">Todavía no hay gastos anotados este mes.</div>`;
   } else {
     $("lista-gastos").innerHTML = delMes.map(g => {
       const cat = CATEGORIAS[g.categoria] || CATEGORIAS.imprevistos;
-      const [, mm, dd] = g.fecha.split("-");
+      const [, mm, dd] = String(g.fecha).split("-");
       return `<div class="gasto">
         <div class="icono-cat" style="background:${cat.bg};width:36px;height:36px">${cat.emoji}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.descripcion}</div>
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.descripcion || cat.nombre}</div>
           <div style="font-size:12px;color:#5B6B64">${dd}/${mm} · ${cat.nombre}</div>
         </div>
-        <div style="font-size:14px;font-weight:700;color:#A53D33;white-space:nowrap">−${fmt(g.monto)}</div>
+        <div style="font-size:14px;font-weight:700;color:#A53D33;white-space:nowrap">−${fmt(Number(g.monto))}</div>
         <button class="btn-borrar" onclick="eliminarGasto('${g.id}')" title="Eliminar">🗑️</button>
       </div>`;
     }).join("");
   }
 
-  // Libro
   const porMes = {}, porAnio = {};
   for (const g of gastos) {
-    const [y, mm] = g.fecha.split("-");
-    porMes[y+"-"+mm] = (porMes[y+"-"+mm]||0) + g.monto;
-    porAnio[y] = (porAnio[y]||0) + g.monto;
+    const [y, mm] = String(g.fecha).split("-");
+    const monto = Number(g.monto);
+    porMes[y+"-"+mm] = (porMes[y+"-"+mm]||0) + monto;
+    porAnio[y] = (porAnio[y]||0) + monto;
   }
   const anios = Object.keys(porAnio).sort((a,b) => b-a);
   if (anios.length === 0) {
@@ -340,7 +429,39 @@ function pintar() {
   }
 }
 
-init();
+// ══ ARRANQUE ══
+function prepararFormularios() {
+  $("fecha").value = hoy.toISOString().slice(0,10);
+  const chips = $("chips");
+  for (const [key, cat] of Object.entries(CATEGORIAS)) {
+    if (cat.oculta) continue;
+    const b = document.createElement("button");
+    b.className = "chip" + (key === categoria ? " activa" : "");
+    b.style.background = cat.bg; b.style.color = cat.color;
+    b.dataset.key = key;
+    b.textContent = cat.emoji + " " + cat.nombre;
+    b.onclick = () => {
+      categoria = key;
+      document.querySelectorAll(".chip").forEach(c => {
+        c.classList.toggle("activa", c.dataset.key === key);
+        c.style.borderColor = c.dataset.key === key ? CATEGORIAS[key].color : "transparent";
+      });
+    };
+    if (key === categoria) b.style.borderColor = cat.color;
+    chips.appendChild(b);
+  }
+  MESES.forEach((m,i) => $("ant-mes").add(new Option(m, i)));
+  const mesPasado = hoy.getMonth() === 0 ? 11 : hoy.getMonth()-1;
+  $("ant-mes").value = mesPasado;
+  for (let d = 0; d < 5; d++) {
+    const y = hoy.getFullYear() - d;
+    $("ant-anio").add(new Option(y, y));
+  }
+  if (hoy.getMonth() === 0) $("ant-anio").value = hoy.getFullYear()-1;
+}
+
+prepararFormularios();
+if (clave) { iniciarApp(); }
 </script>
 </body>
 </html>
