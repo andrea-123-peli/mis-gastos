@@ -15,7 +15,7 @@
   .pestanas { display: flex; gap: 8px; margin-bottom: 16px; background: #E1E5E2; border-radius: 14px; padding: 5px; }
   .pestana {
     flex: 1; padding: 12px 0; border-radius: 10px; border: none; cursor: pointer;
-    font-size: 15px; font-weight: 800; background: transparent; color: #5B6B64; font-family: inherit;
+    font-size: 13.5px; font-weight: 800; background: transparent; color: #5B6B64; font-family: inherit; line-height: 1.25;
   }
   .pestana.activa { background: #12352C; color: #FFF; }
 
@@ -116,8 +116,9 @@
     </div>
 
     <div class="pestanas">
-      <button class="pestana activa" id="tab-mes" onclick="cambiarVista('mes')">✏️ Anotar gastos</button>
-      <button class="pestana" id="tab-libro" onclick="cambiarVista('libro')">📖 Libro de gastos</button>
+      <button class="pestana activa" id="tab-mes" onclick="cambiarVista('mes')">✏️ Gastos del mes</button>
+      <button class="pestana" id="tab-extras" onclick="cambiarVista('extras')">⭐ Extras del año</button>
+      <button class="pestana" id="tab-libro" onclick="cambiarVista('libro')">📖 Libro</button>
     </div>
 
     <div id="cargando" class="cargando">Cargando tus gastos…</div>
@@ -158,6 +159,38 @@
         <div id="lista-gastos"></div>
       </div>
 
+      <!-- VISTA: EXTRAS DEL AÑO -->
+      <div id="vista-extras" class="oculto">
+        <div class="tarjeta">
+          <h2>⭐ Anotar un gasto extra</h2>
+          <p style="font-size:13px;color:#5B6B64;margin:-6px 0 14px">
+            Para pagos grandes del año (seguro, impuestos, SOAT, matrículas…). No se suman a ningún mes, solo al total del año.
+          </p>
+          <label class="etiqueta">1. ¿Cuánto fue? (en pesos)</label>
+          <input class="campo" type="number" inputmode="numeric" id="ext-monto" placeholder="Ej: 850000">
+          <label class="etiqueta">2. ¿Qué fue?</label>
+          <input class="campo" type="text" id="ext-descripcion" placeholder="Ej: SOAT del carro, impuesto, seguro…">
+          <label class="etiqueta">3. Fecha</label>
+          <input class="campo" type="date" id="ext-fecha">
+          <button class="boton-principal" style="background:#8A5A1D" id="btn-ext" onclick="agregarExtra()">Guardar gasto extra</button>
+        </div>
+
+        <div class="total-mes" style="background:#5C3D12">
+          <div>
+            <div style="font-size:12px;color:#F0D3A8">Total de extras en</div>
+            <div style="font-size:26px;font-weight:800" id="ext-total">$ 0</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="btn-mes" onclick="cambiarAnioExtras(-1)">‹</button>
+            <span style="font-size:13px;font-weight:700;min-width:60px;text-align:center" id="ext-anio-titulo"></span>
+            <button class="btn-mes" onclick="cambiarAnioExtras(1)">›</button>
+          </div>
+        </div>
+
+        <h3 class="titulo-seccion" id="ext-titulo-lista">Gastos extras del año</h3>
+        <div id="ext-lista"></div>
+      </div>
+
       <!-- VISTA: LIBRO -->
       <div id="vista-libro" class="oculto">
         <div class="tarjeta" style="margin-bottom:14px">
@@ -193,7 +226,10 @@ const CATEGORIAS = {
   imprevistos:{ nombre: "Imprevistos (grandes)", color: "#A53D33", bg: "#F8E8E6", emoji: "🔧" },
   gustos:     { nombre: "Gustos",                color: "#1D7A8A", bg: "#E2F2F5", emoji: "☕" },
   hormigas:   { nombre: "Hormigas",              color: "#8A6D1D", bg: "#F5EFDD", emoji: "🍬" },
+  salud:      { nombre: "Salud",                 color: "#C2416B", bg: "#FBE7EE", emoji: "💊" },
+  carro:      { nombre: "Carro",                 color: "#2E5E9E", bg: "#E4ECF7", emoji: "🚗" },
   anterior:   { nombre: "Total del mes (anotado aparte)", color: "#4A6B5F", bg: "#E6EEEA", emoji: "📦", oculta: true },
+  extra:      { nombre: "Gasto extra del año",   color: "#8A5A1D", bg: "#F6EBDC", emoji: "⭐", oculta: true, anual: true },
 };
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
@@ -202,6 +238,8 @@ let clave = localStorage.getItem("misgastos_clave") || "";
 const hoy = new Date();
 let mes = hoy.getMonth(), anio = hoy.getFullYear();
 let categoria = "trabajo";
+let anioExtras = hoy.getFullYear();
+const esExtra = g => g.categoria === "extra";
 
 const fmt = n => new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n);
 const $ = id => document.getElementById(id);
@@ -323,6 +361,39 @@ async function agregarMesAnterior() {
   setTimeout(() => b.textContent = "Anotar ese mes", 2000);
 }
 
+async function agregarExtra() {
+  const valor = parseFloat(String($("ext-monto").value).replace(/[.,\s]/g,""));
+  if (!valor || valor <= 0) { alert("Escriba primero cuánto fue el gasto extra."); return; }
+  const b = $("btn-ext");
+  b.disabled = true; b.textContent = "Guardando…";
+  const fecha = $("ext-fecha").value || hoy.toISOString().slice(0,10);
+  const registro = {
+    id: Date.now().toString(),
+    clave,
+    categoria: "extra",
+    monto: valor,
+    descripcion: $("ext-descripcion").value.trim() || "Gasto extra",
+    fecha,
+  };
+  try {
+    await guardarEnNube(registro);
+    gastos.unshift(registro);
+    $("ext-monto").value = ""; $("ext-descripcion").value = "";
+    anioExtras = Number(fecha.slice(0,4));
+    b.textContent = "✓ ¡Gasto extra guardado!";
+    $("aviso-conexion").classList.add("oculto");
+    pintar();
+  } catch(e) {
+    $("aviso-conexion").classList.remove("oculto");
+    alert("No se pudo guardar. Revisa tu Internet e intenta otra vez.");
+    b.textContent = "Guardar gasto extra";
+  }
+  b.disabled = false;
+  setTimeout(() => b.textContent = "Guardar gasto extra", 2000);
+}
+
+function cambiarAnioExtras(dir) { anioExtras += dir; pintar(); }
+
 async function eliminarGasto(id) {
   if (!confirm("¿Borrar este gasto?")) return;
   try {
@@ -342,10 +413,10 @@ function cambiarMes(dir) {
 }
 
 function cambiarVista(v) {
-  $("vista-mes").classList.toggle("oculto", v !== "mes");
-  $("vista-libro").classList.toggle("oculto", v !== "libro");
-  $("tab-mes").classList.toggle("activa", v === "mes");
-  $("tab-libro").classList.toggle("activa", v === "libro");
+  for (const x of ["mes","extras","libro"]) {
+    $("vista-"+x).classList.toggle("oculto", v !== x);
+    $("tab-"+x).classList.toggle("activa", v === x);
+  }
 }
 
 function irAMes(m, y) {
@@ -358,6 +429,7 @@ function irAMes(m, y) {
 // ══ PINTAR ══
 function pintar() {
   const delMes = gastos.filter(g => {
+    if (esExtra(g)) return false;
     const [y, mm] = String(g.fecha).split("-").map(Number);
     return y === anio && mm-1 === mes;
   });
@@ -400,11 +472,12 @@ function pintar() {
     }).join("");
   }
 
-  const porMes = {}, porAnio = {};
+  const porMes = {}, porAnio = {}, extrasAnio = {};
   for (const g of gastos) {
     const [y, mm] = String(g.fecha).split("-");
     const monto = Number(g.monto);
-    porMes[y+"-"+mm] = (porMes[y+"-"+mm]||0) + monto;
+    if (esExtra(g)) extrasAnio[y] = (extrasAnio[y]||0) + monto;
+    else porMes[y+"-"+mm] = (porMes[y+"-"+mm]||0) + monto;
     porAnio[y] = (porAnio[y]||0) + monto;
   }
   const anios = Object.keys(porAnio).sort((a,b) => b-a);
@@ -423,15 +496,50 @@ function pintar() {
             <span>${MESES[x.m]}${Number(y)===anio && x.m===mes ? " ← viendo":""}</span>
             <span style="font-weight:700">${fmt(x.t)}</span>
           </button>`).join("")}
+          ${extrasAnio[y] ? `<button class="mes-fila" style="background:#F6EBDC;color:#5C3D12;font-weight:800" onclick="irAExtras(${y})">
+            <span>⭐ Gastos extras</span><span>${fmt(extrasAnio[y])}</span>
+          </button>` : ""}
         </div>
       </div>`;
-    }).join("") + `<p class="nota">Toca cualquier mes para ver su detalle en la pestaña "Anotar gastos".</p>`;
+    }).join("") + `<p class="nota">Toca cualquier mes (o los extras) para ver su detalle.</p>`;
   }
+
+  // Pestaña de extras
+  const extras = gastos.filter(g => esExtra(g) && String(g.fecha).startsWith(anioExtras + "-"));
+  const totalExt = extras.reduce((s, g) => s + Number(g.monto), 0);
+  $("ext-anio-titulo").textContent = anioExtras;
+  $("ext-total").textContent = fmt(totalExt);
+  $("ext-titulo-lista").textContent = "Gastos extras de " + anioExtras;
+  if (extras.length === 0) {
+    $("ext-lista").innerHTML = `<div class="vacio">No hay gastos extras anotados en ${anioExtras}.</div>`;
+  } else {
+    const cat = CATEGORIAS.extra;
+    $("ext-lista").innerHTML = extras.map(g => {
+      const [, mm, dd] = String(g.fecha).split("-");
+      return `<div class="gasto">
+        <div class="icono-cat" style="background:${cat.bg};width:36px;height:36px">${cat.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.descripcion || cat.nombre}</div>
+          <div style="font-size:12px;color:#5B6B64">${dd}/${mm}/${anioExtras}</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:#A53D33;white-space:nowrap">−${fmt(Number(g.monto))}</div>
+        <button class="btn-borrar" onclick="eliminarGasto('${g.id}')" title="Eliminar">🗑️</button>
+      </div>`;
+    }).join("");
+  }
+}
+
+function irAExtras(y) {
+  anioExtras = y;
+  cambiarVista("extras");
+  window.scrollTo({top: 0, behavior: "smooth"});
+  pintar();
 }
 
 // ══ ARRANQUE ══
 function prepararFormularios() {
   $("fecha").value = hoy.toISOString().slice(0,10);
+  $("ext-fecha").value = hoy.toISOString().slice(0,10);
   const chips = $("chips");
   for (const [key, cat] of Object.entries(CATEGORIAS)) {
     if (cat.oculta) continue;
