@@ -12,12 +12,13 @@
   }
   .contenedor { max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; }
 
-  .pestanas { display: flex; gap: 8px; margin-bottom: 16px; background: #E1E5E2; border-radius: 14px; padding: 5px; }
+  .pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; background: #E1E5E2; border-radius: 14px; padding: 5px; }
   .pestana {
     flex: 1; padding: 12px 0; border-radius: 10px; border: none; cursor: pointer;
     font-size: 13.5px; font-weight: 800; background: transparent; color: #5B6B64; font-family: inherit; line-height: 1.25;
   }
   .pestana.activa { background: #12352C; color: #FFF; }
+  .pestana.ancha { grid-column: 1 / -1; }
 
   .tarjeta { background: #FFF; border-radius: 18px; padding: 18px; box-shadow: 0 2px 8px rgba(30,42,38,.08); }
   .tarjeta h2 { font-size: 18px; font-weight: 800; color: #12352C; margin-bottom: 14px; }
@@ -117,8 +118,10 @@
 
     <div class="pestanas">
       <button class="pestana activa" id="tab-mes" onclick="cambiarVista('mes')">✏️ Gastos del mes</button>
+      <button class="pestana" id="tab-ingresos" onclick="cambiarVista('ingresos')">💵 Ingresos del mes</button>
       <button class="pestana" id="tab-extras" onclick="cambiarVista('extras')">⭐ Extras del año</button>
-      <button class="pestana" id="tab-libro" onclick="cambiarVista('libro')">📖 Libro</button>
+      <button class="pestana" id="tab-cuentas" onclick="cambiarVista('cuentas')">🤝 Cuentas con mi pareja</button>
+      <button class="pestana ancha" id="tab-libro" onclick="cambiarVista('libro')">📖 Libro</button>
     </div>
 
     <div id="cargando" class="cargando">Cargando tus gastos…</div>
@@ -159,6 +162,52 @@
         <div id="lista-gastos"></div>
       </div>
 
+      <!-- VISTA: INGRESOS -->
+      <div id="vista-ingresos" class="oculto">
+        <div class="tarjeta">
+          <h2>💵 Anotar un ingreso</h2>
+          <label class="etiqueta">1. ¿De dónde vino?</label>
+          <input class="campo" type="text" id="ing-fuente" list="ing-fuentes" placeholder="Ej: Rappi, sueldo, arriendo, un trabajito…" autocomplete="off">
+          <datalist id="ing-fuentes"></datalist>
+          <div class="chips" id="ing-chips" style="margin-top:-8px"></div>
+          <label class="etiqueta">2. ¿Cuánto entró? (en pesos)</label>
+          <input class="campo" type="number" inputmode="numeric" id="ing-monto" placeholder="Ej: 120000">
+          <label class="etiqueta">3. Fecha</label>
+          <input class="campo" type="date" id="ing-fecha">
+          <button class="boton-principal" style="background:#1D8A5A" id="btn-ing" onclick="agregarIngreso()">Guardar ingreso</button>
+        </div>
+
+        <div class="total-mes" style="display:block">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:12px;color:#9AD0B8">Resumen de</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <button class="btn-mes" onclick="cambiarMes(-1)">‹</button>
+              <span style="font-size:13px;font-weight:700;min-width:100px;text-align:center" id="ing-mes-titulo"></span>
+              <button class="btn-mes" onclick="cambiarMes(1)">›</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <div style="flex:1;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px">
+              <div style="font-size:11px;color:#9AD0B8">Me entró</div>
+              <div style="font-size:16px;font-weight:800;color:#7FE0AE" id="ing-total"></div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px">
+              <div style="font-size:11px;color:#9AD0B8">Gasté</div>
+              <div style="font-size:16px;font-weight:800;color:#FFB4A6" id="ing-gastos"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:#9AD0B8" id="ing-quedo-label">Me quedó</div>
+          <div style="font-size:28px;font-weight:800" id="ing-quedo"></div>
+        </div>
+
+        <h3 class="titulo-seccion" id="ing-titulo-fuentes">Ingresos por fuente</h3>
+        <div class="tabla-totales" id="ing-por-fuente"></div>
+
+        <h3 class="titulo-seccion" id="ing-titulo-lista">Ingresos del mes</h3>
+        <div id="ing-lista"></div>
+        <p class="nota" id="ing-anio"></p>
+      </div>
+
       <!-- VISTA: EXTRAS DEL AÑO -->
       <div id="vista-extras" class="oculto">
         <div class="tarjeta">
@@ -189,6 +238,34 @@
 
         <h3 class="titulo-seccion" id="ext-titulo-lista">Gastos extras del año</h3>
         <div id="ext-lista"></div>
+      </div>
+
+      <!-- VISTA: CUENTAS CON MI PAREJA -->
+      <div id="vista-cuentas" class="oculto">
+        <div class="total-mes" id="cta-saldo-caja" style="margin-top:0;margin-bottom:16px;display:block">
+          <div style="font-size:12px;color:#9AD0B8">Cómo van las cuentas</div>
+          <div style="font-size:22px;font-weight:800;margin-top:2px" id="cta-saldo-texto">Están a paz y salvo</div>
+          <div style="font-size:26px;font-weight:800" id="cta-saldo-valor"></div>
+        </div>
+
+        <div class="tarjeta">
+          <h2>Anotar en las cuentas</h2>
+          <p style="font-size:13px;color:#5B6B64;margin:-6px 0 14px">
+            Esto no suma en tus gastos. Solo lleva la cuenta de quién le debe a quién.
+          </p>
+          <label class="etiqueta">1. ¿Qué pasó?</label>
+          <div class="chips" id="cta-chips"></div>
+          <label class="etiqueta">2. ¿Cuánto? (en pesos)</label>
+          <input class="campo" type="number" inputmode="numeric" id="cta-monto" placeholder="Ej: 50000">
+          <label class="etiqueta">3. ¿Para qué? (opcional)</label>
+          <input class="campo" type="text" id="cta-descripcion" placeholder="Ej: para el arriendo, para la cita…">
+          <label class="etiqueta">4. Fecha</label>
+          <input class="campo" type="date" id="cta-fecha">
+          <button class="boton-principal" id="btn-cta" onclick="agregarCuenta()">Guardar</button>
+        </div>
+
+        <h3 class="titulo-seccion">Historial de las cuentas</h3>
+        <div id="cta-lista"></div>
       </div>
 
       <!-- VISTA: LIBRO -->
@@ -228,6 +305,7 @@ const CATEGORIAS = {
   hormigas:   { nombre: "Hormigas",              color: "#8A6D1D", bg: "#F5EFDD", emoji: "🍬" },
   salud:      { nombre: "Salud",                 color: "#C2416B", bg: "#FBE7EE", emoji: "💊" },
   carro:      { nombre: "Carro",                 color: "#2E5E9E", bg: "#E4ECF7", emoji: "🚗" },
+  familia:    { nombre: "Familia",               color: "#3F7A3A", bg: "#E5F2E3", emoji: "👨‍👩‍👧" },
   anterior:   { nombre: "Total del mes (anotado aparte)", color: "#4A6B5F", bg: "#E6EEEA", emoji: "📦", oculta: true },
   extra:      { nombre: "Gasto extra del año",   color: "#8A5A1D", bg: "#F6EBDC", emoji: "⭐", oculta: true, anual: true },
 };
@@ -240,6 +318,16 @@ let mes = hoy.getMonth(), anio = hoy.getFullYear();
 let categoria = "trabajo";
 let anioExtras = hoy.getFullYear();
 const esExtra = g => g.categoria === "extra";
+const esCuenta = g => String(g.categoria).startsWith("cta_");
+const esIngreso = g => g.categoria === "ingreso";
+// signo: +1 = sube lo que ella te debe, -1 = lo baja
+const TIPOS_CUENTA = {
+  cta_preste:   { nombre: "Le presté",          emoji: "📤", signo:  1, color: "#B3641D", bg: "#F9EDDD" },
+  cta_abono:    { nombre: "Me abonó / me pagó", emoji: "📥", signo: -1, color: "#1D8A5A", bg: "#E3F4EC" },
+  cta_presto:   { nombre: "Ella me prestó",     emoji: "🙋", signo: -1, color: "#4A5FA5", bg: "#E8ECF8" },
+  cta_abone:    { nombre: "Le aboné / le pagué",emoji: "💸", signo:  1, color: "#7A4AA5", bg: "#F0E8F8" },
+};
+let tipoCuenta = "cta_preste";
 
 const fmt = n => new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n);
 const $ = id => document.getElementById(id);
@@ -394,6 +482,62 @@ async function agregarExtra() {
 
 function cambiarAnioExtras(dir) { anioExtras += dir; pintar(); }
 
+async function agregarIngreso() {
+  const fuente = $("ing-fuente").value.trim();
+  const valor = parseFloat(String($("ing-monto").value).replace(/[.,\s]/g,""));
+  if (!fuente) { alert("Escriba de dónde vino el ingreso."); return; }
+  if (!valor || valor <= 0) { alert("Escriba cuánto entró."); return; }
+  const b = $("btn-ing");
+  b.disabled = true; b.textContent = "Guardando…";
+  const fecha = $("ing-fecha").value || hoy.toISOString().slice(0,10);
+  const registro = { id: Date.now().toString(), clave, categoria: "ingreso", monto: valor, descripcion: fuente, fecha };
+  try {
+    await guardarEnNube(registro);
+    gastos.unshift(registro);
+    $("ing-monto").value = "";
+    const [y, m] = fecha.split("-").map(Number);
+    anio = y; mes = m - 1;
+    b.textContent = "✓ ¡Ingreso guardado!";
+    $("aviso-conexion").classList.add("oculto");
+    pintar();
+  } catch(e) {
+    $("aviso-conexion").classList.remove("oculto");
+    alert("No se pudo guardar. Revisa tu Internet e intenta otra vez.");
+    b.textContent = "Guardar ingreso";
+  }
+  b.disabled = false;
+  setTimeout(() => b.textContent = "Guardar ingreso", 2000);
+}
+
+async function agregarCuenta() {
+  const valor = parseFloat(String($("cta-monto").value).replace(/[.,\s]/g,""));
+  if (!valor || valor <= 0) { alert("Escriba primero cuánto fue."); return; }
+  const b = $("btn-cta");
+  b.disabled = true; b.textContent = "Guardando…";
+  const registro = {
+    id: Date.now().toString(),
+    clave,
+    categoria: tipoCuenta,
+    monto: valor,
+    descripcion: $("cta-descripcion").value.trim() || TIPOS_CUENTA[tipoCuenta].nombre,
+    fecha: $("cta-fecha").value || hoy.toISOString().slice(0,10),
+  };
+  try {
+    await guardarEnNube(registro);
+    gastos.unshift(registro);
+    $("cta-monto").value = ""; $("cta-descripcion").value = "";
+    b.textContent = "✓ ¡Guardado!";
+    $("aviso-conexion").classList.add("oculto");
+    pintar();
+  } catch(e) {
+    $("aviso-conexion").classList.remove("oculto");
+    alert("No se pudo guardar. Revisa tu Internet e intenta otra vez.");
+    b.textContent = "Guardar";
+  }
+  b.disabled = false;
+  setTimeout(() => b.textContent = "Guardar", 2000);
+}
+
 async function eliminarGasto(id) {
   if (!confirm("¿Borrar este gasto?")) return;
   try {
@@ -413,7 +557,7 @@ function cambiarMes(dir) {
 }
 
 function cambiarVista(v) {
-  for (const x of ["mes","extras","libro"]) {
+  for (const x of ["mes","ingresos","extras","cuentas","libro"]) {
     $("vista-"+x).classList.toggle("oculto", v !== x);
     $("tab-"+x).classList.toggle("activa", v === x);
   }
@@ -429,7 +573,7 @@ function irAMes(m, y) {
 // ══ PINTAR ══
 function pintar() {
   const delMes = gastos.filter(g => {
-    if (esExtra(g)) return false;
+    if (esExtra(g) || esCuenta(g) || esIngreso(g)) return false;
     const [y, mm] = String(g.fecha).split("-").map(Number);
     return y === anio && mm-1 === mes;
   });
@@ -474,6 +618,7 @@ function pintar() {
 
   const porMes = {}, porAnio = {}, extrasAnio = {};
   for (const g of gastos) {
+    if (esCuenta(g) || esIngreso(g)) continue;
     const [y, mm] = String(g.fecha).split("-");
     const monto = Number(g.monto);
     if (esExtra(g)) extrasAnio[y] = (extrasAnio[y]||0) + monto;
@@ -527,6 +672,93 @@ function pintar() {
       </div>`;
     }).join("");
   }
+  pintarCuentas();
+  pintarIngresos(total);
+}
+
+function pintarIngresos(gastadoMes) {
+  const enMes = g => { const [y, mm] = String(g.fecha).split("-").map(Number); return y === anio && mm-1 === mes; };
+  const ings = gastos.filter(g => esIngreso(g) && enMes(g));
+  const totalIng = ings.reduce((s, g) => s + Number(g.monto), 0);
+  const quedo = totalIng - gastadoMes;
+  $("ing-mes-titulo").textContent = MESES[mes] + " " + anio;
+  $("ing-total").textContent = fmt(totalIng);
+  $("ing-gastos").textContent = fmt(gastadoMes);
+  $("ing-quedo-label").textContent = quedo >= 0 ? "Me quedó" : "Gasté más de lo que me entró";
+  $("ing-quedo").textContent = fmt(Math.abs(quedo));
+  $("ing-quedo").style.color = quedo >= 0 ? "#F2F6F3" : "#FFB4A6";
+  $("ing-titulo-fuentes").textContent = "Ingresos de " + MESES[mes].toLowerCase() + " por fuente";
+  $("ing-titulo-lista").textContent = "Ingresos de " + MESES[mes].toLowerCase();
+
+  // Fuentes ya usadas (para escoger rápido)
+  const todas = [...new Set(gastos.filter(esIngreso).map(g => g.descripcion))];
+  $("ing-fuentes").innerHTML = todas.map(f => `<option value="${f.replace(/"/g,"&quot;")}">`).join("");
+  $("ing-chips").innerHTML = todas.slice(0, 8).map(f =>
+    `<button class="chip activa" style="background:#E3F4EC;color:#1D8A5A;padding:7px 12px;font-size:13px" onclick="$('ing-fuente').value=this.dataset.f" data-f="${f.replace(/"/g,"&quot;")}">${f}</button>`).join("");
+
+  const porFuente = {};
+  for (const g of ings) porFuente[g.descripcion] = (porFuente[g.descripcion]||0) + Number(g.monto);
+  const filas = Object.entries(porFuente).sort((a,b) => b[1]-a[1]);
+  $("ing-por-fuente").innerHTML = filas.length === 0
+    ? `<div class="vacio">Todavía no hay ingresos anotados este mes.</div>`
+    : filas.map(([f, t]) => `<div class="fila-total">
+        <div class="icono-cat" style="background:#E3F4EC">💵</div>
+        <div style="flex:1;font-size:15px;font-weight:700">${f}</div>
+        <div style="font-size:16px;font-weight:800;color:#1D8A5A">${fmt(t)}</div>
+      </div>`).join("") + `<div class="fila-final"><span>Total que me entró</span><span>${fmt(totalIng)}</span></div>`;
+
+  $("ing-lista").innerHTML = ings.map(g => {
+    const [, mm, dd] = String(g.fecha).split("-");
+    return `<div class="gasto">
+      <div class="icono-cat" style="background:#E3F4EC;width:36px;height:36px">💵</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.descripcion}</div>
+        <div style="font-size:12px;color:#5B6B64">${dd}/${mm}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:#1D8A5A;white-space:nowrap">+${fmt(Number(g.monto))}</div>
+      <button class="btn-borrar" onclick="eliminarGasto('${g.id}')" title="Eliminar">🗑️</button>
+    </div>`;
+  }).join("");
+
+  const totalAnio = gastos.filter(g => esIngreso(g) && String(g.fecha).startsWith(anio + "-")).reduce((s, g) => s + Number(g.monto), 0);
+  $("ing-anio").textContent = "En todo " + anio + " te han entrado " + fmt(totalAnio) + ".";
+}
+
+function pintarCuentas() {
+  const movs = gastos.filter(esCuenta).sort((a,b) => String(b.fecha).localeCompare(String(a.fecha)) || b.id.localeCompare(a.id));
+  let saldo = 0;
+  for (const g of movs) saldo += (TIPOS_CUENTA[g.categoria]?.signo || 0) * Number(g.monto);
+  const caja = $("cta-saldo-caja");
+  if (saldo > 0) {
+    $("cta-saldo-texto").textContent = "💚 Tu pareja te debe";
+    $("cta-saldo-valor").textContent = fmt(saldo);
+    caja.style.background = "#12352C";
+  } else if (saldo < 0) {
+    $("cta-saldo-texto").textContent = "🧡 Tú le debes a tu pareja";
+    $("cta-saldo-valor").textContent = fmt(-saldo);
+    caja.style.background = "#7A3B1D";
+  } else {
+    $("cta-saldo-texto").textContent = "🤝 Están a paz y salvo";
+    $("cta-saldo-valor").textContent = "";
+    caja.style.background = "#12352C";
+  }
+  if (movs.length === 0) {
+    $("cta-lista").innerHTML = `<div class="vacio">Todavía no hay nada anotado en las cuentas.</div>`;
+    return;
+  }
+  $("cta-lista").innerHTML = movs.map(g => {
+    const t = TIPOS_CUENTA[g.categoria] || TIPOS_CUENTA.cta_preste;
+    const [yy, mm, dd] = String(g.fecha).split("-");
+    return `<div class="gasto">
+      <div class="icono-cat" style="background:${t.bg};width:36px;height:36px">${t.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.descripcion || t.nombre}</div>
+        <div style="font-size:12px;color:#5B6B64">${dd}/${mm}/${yy} · ${t.nombre}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:${t.color};white-space:nowrap">${fmt(Number(g.monto))}</div>
+      <button class="btn-borrar" onclick="eliminarGasto('${g.id}')" title="Eliminar">🗑️</button>
+    </div>`;
+  }).join("");
 }
 
 function irAExtras(y) {
@@ -540,6 +772,24 @@ function irAExtras(y) {
 function prepararFormularios() {
   $("fecha").value = hoy.toISOString().slice(0,10);
   $("ext-fecha").value = hoy.toISOString().slice(0,10);
+  $("cta-fecha").value = hoy.toISOString().slice(0,10);
+  $("ing-fecha").value = hoy.toISOString().slice(0,10);
+  for (const [key, t] of Object.entries(TIPOS_CUENTA)) {
+    const b = document.createElement("button");
+    b.className = "chip cta-chip" + (key === tipoCuenta ? " activa" : "");
+    b.style.background = t.bg; b.style.color = t.color;
+    b.style.borderColor = key === tipoCuenta ? t.color : "transparent";
+    b.dataset.key = key;
+    b.textContent = t.emoji + " " + t.nombre;
+    b.onclick = () => {
+      tipoCuenta = key;
+      document.querySelectorAll(".cta-chip").forEach(c => {
+        c.classList.toggle("activa", c.dataset.key === key);
+        c.style.borderColor = c.dataset.key === key ? TIPOS_CUENTA[key].color : "transparent";
+      });
+    };
+    $("cta-chips").appendChild(b);
+  }
   const chips = $("chips");
   for (const [key, cat] of Object.entries(CATEGORIAS)) {
     if (cat.oculta) continue;
@@ -550,7 +800,7 @@ function prepararFormularios() {
     b.textContent = cat.emoji + " " + cat.nombre;
     b.onclick = () => {
       categoria = key;
-      document.querySelectorAll(".chip").forEach(c => {
+      document.querySelectorAll("#chips .chip").forEach(c => {
         c.classList.toggle("activa", c.dataset.key === key);
         c.style.borderColor = c.dataset.key === key ? CATEGORIAS[key].color : "transparent";
       });
